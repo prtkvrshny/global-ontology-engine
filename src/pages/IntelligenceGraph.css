@@ -1,0 +1,154 @@
+.graph-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.graph-header {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title-group h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.live-badge {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.graph-wrapper {
+  width: 100%;
+  height: 100vh;
+  cursor: grab;
+}
+
+.graph-wrapper:active {
+  cursor: grabbing;
+}
+
+/* Country Analysis Panel */
+.country-analysis-panel {
+  position: absolute;
+  top: 100px;
+  right: 24px;
+  width: 320px;
+  padding: 24px;
+  border-radius: 12px;
+  z-index: 20;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(6, 182, 212, 0.05);
+  background: rgba(10, 10, 15, 0.85);
+}
+
+.cap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 12px;
+}
+
+.cap-header h4 {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.cap-header button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cap-header button:hover {
+  color: #fff;
+}
+
+.cap-section {
+  margin-bottom: 20px;
+}
+
+.caps-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.text-green { color: #34c759; }
+.text-red { color: #ff3b30; }
+
+.relation-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relation-list li {
+  padding: 8px 12px;
+  background: rgba(52, 199, 89, 0.1);
+  border-left: 3px solid #34c759;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.relation-list.threats li {
+  background: rgba(255, 59, 48, 0.1);
+  border-left-color: #ff3b30;
+}
