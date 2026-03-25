@@ -1,13 +1,40 @@
 :root {
-  --bg-color: #050505;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --accent-cyan: #06b6d4;
-  --accent-blue: #3b82f6;
-  --accent-purple: #8b5cf6;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.08);
+  /* Ultra-Premium Obsidian Palette */
+  --bg-color: #030303;
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  
+  /* Electric Brand Accents */
+  --accent-cyan: #06b6d4; 
+  --accent-blue: #6366f1;   /* Electric Indigo */
+  --accent-purple: #a855f7; /* Vivid Violet */
+  --accent-glow: rgba(99, 102, 241, 0.15); /* Indigo glow */
+  
+  /* Obsidian Card Matting */
+  --card-bg: rgba(18, 18, 20, 0.65);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  
+  /* Clean Typography */
   --font-family: 'Inter', system-ui, sans-serif;
+}
+
+[data-theme="light"] {
+  /* High-Contrast Light Matrix */
+  --bg-color: #f7f6f3;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  
+  /* Vibrant Legible Accents */
+  --accent-cyan: #0284c7; 
+  --accent-blue: #2563eb;   /* Solid Royal Blue */
+  --accent-purple: #7c3aed; /* Deep Violet */
+  --accent-glow: rgba(37, 99, 235, 0.15); /* Blue glow */
+  
+  /* Crisp Glass Overlay */
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.02) inset;
 }
 
 * {
@@ -24,24 +51,40 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.8s ease;
 }
 
 .app-container {
   display: flex;
   min-height: 100vh;
   width: 100vw;
+  background-image: radial-gradient(circle at top left, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+                    radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.05) 0%, transparent 40%);
 }
 
-/* Glassmorphism utilities */
-.glass-panel {
+/* 
+  Premium Dark Card Utilities
+*/
+.bento-card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.4s ease;
 }
 
-/* Scrollbar styling */
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.3); /* Electric border pop */
+  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.9), 0 0 32px var(--accent-glow);
+}
+
+/* Scrollbar for Dark Aesthetic */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -53,7 +96,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Users, ShieldAlert, X, Activity } from 'lucide-react';
 import './IntelligenceGraph.css';
 
-export function IntelligenceGraph({ userCountry }) {
+export function IntelligenceGraph({ userCountry, theme }) {
   const globeRef = useRef();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [countries, setCountries] = useState({ features: [] });
@@ -56,92 +56,96 @@ export function IntelligenceGraph({ userCountry }) {
     "Copper Ore", "Refined Petroleum", "Wheat", "Coffee & Tea"
   ];
 
-  const REAL_TRADE_PROFILES = {
-    'United States': {
-      exports: [ { item: 'Aerospace & Transport', partners: ['Canada (15%)', 'Mexico (13%)', 'China (8%)'] }, { item: 'Refined Petroleum', partners: ['Mexico (21%)', 'Canada (15%)', 'Brazil (8%)'] }, { item: 'Semiconductors & Medical', partners: ['Mexico (18%)', 'China (12%)', 'Germany (8%)'] } ],
-      imports: [ { item: 'Automotive Vehicles', partners: ['Mexico (36%)', 'Japan (18%)', 'Canada (14%)'] }, { item: 'Consumer Electronics', partners: ['China (44%)', 'Vietnam (14%)', 'Taiwan (8%)'] }, { item: 'Crude Petroleum', partners: ['Canada (60%)', 'Mexico (10%)', 'Saudi Arabia (7%)'] } ]
+  const BILATERAL_TRADE_DB = {
+    'China-India': {
+      'India': {
+         exports: [ { item: 'Iron Ore & Minerals', percentage: '34.2%' }, { item: 'Organic Chemicals', percentage: '18.5%' }, { item: 'Cotton & Textiles', percentage: '12.1%' } ],
+         imports: [ { item: 'Telecommunications Equip.', percentage: '28.4%' }, { item: 'Integrated Circuits', percentage: '21.2%' }, { item: 'Industrial Machinery', percentage: '15.8%' } ]
+      },
+      'China': {
+         exports: [ { item: 'Telecommunications Equip.', percentage: '28.4%' }, { item: 'Integrated Circuits', percentage: '21.2%' }, { item: 'Industrial Machinery', percentage: '15.8%' } ],
+         imports: [ { item: 'Iron Ore & Minerals', percentage: '34.2%' }, { item: 'Organic Chemicals', percentage: '18.5%' }, { item: 'Cotton & Textiles', percentage: '12.1%' } ]
+      }
     },
-    'China': {
-      exports: [ { item: 'Broadcasting Equipment', partners: ['United States (21%)', 'Hong Kong (16%)', 'Japan (6%)'] }, { item: 'Computers & Integrated Circuits', partners: ['United States (18%)', 'Hong Kong (14%)', 'Netherlands (6%)'] }, { item: 'Textiles & Machinery', partners: ['Japan (11%)', 'Vietnam (8%)', 'South Korea (6%)'] } ],
-      imports: [ { item: 'Integrated Circuits', partners: ['Taiwan (35%)', 'South Korea (19%)', 'Japan (9%)'] }, { item: 'Crude Petroleum', partners: ['Russia (20%)', 'Saudi Arabia (16%)', 'Iraq (11%)'] }, { item: 'Iron Ore & Copper', partners: ['Australia (62%)', 'Brazil (21%)', 'Peru (5%)'] } ]
+    'India-United States': {
+      'India': {
+         exports: [ { item: 'Pharmaceuticals', percentage: '17.9%' }, { item: 'Gems & Jewelry', percentage: '14.2%' }, { item: 'IT & Software Services', percentage: '12.5%' } ],
+         imports: [ { item: 'Crude Petroleum & Gas', percentage: '18.4%' }, { item: 'Aerospace & Defense', percentage: '9.2%' }, { item: 'Electronic Components', percentage: '7.1%' } ]
+      },
+      'United States': {
+         exports: [ { item: 'Crude Petroleum & Gas', percentage: '18.4%' }, { item: 'Aerospace & Defense', percentage: '9.2%' }, { item: 'Electronic Components', percentage: '7.1%' } ],
+         imports: [ { item: 'Pharmaceuticals', percentage: '17.9%' }, { item: 'Gems & Jewelry', percentage: '14.2%' }, { item: 'IT & Software Services', percentage: '12.5%' } ]
+      }
     },
-    'India': {
-      exports: [ { item: 'Refined Petroleum', partners: ['United Arab Emirates (15%)', 'United States (11%)', 'Netherlands (8%)'] }, { item: 'Pharmaceuticals', partners: ['United States (33%)', 'South Africa (6%)', 'United Kingdom (5%)'] }, { item: 'Diamonds & Jewelry', partners: ['United States (35%)', 'Hong Kong (28%)', 'United Arab Emirates (14%)'] } ],
-      imports: [ { item: 'Crude Petroleum', partners: ['Russia (36%)', 'Iraq (18%)', 'Saudi Arabia (15%)'] }, { item: 'Gold & Precious Metals', partners: ['Switzerland (44%)', 'United Arab Emirates (12%)', 'Peru (8%)'] }, { item: 'Electronics & Coal', partners: ['China (38%)', 'Australia (15%)', 'Indonesia (11%)'] } ]
+    'China-United States': {
+      'United States': {
+         exports: [ { item: 'Soybeans & Agriculture', percentage: '18.2%' }, { item: 'Civil Aircraft Parts', percentage: '14.1%' }, { item: 'Semiconductor Machinery', percentage: '11.5%' } ],
+         imports: [ { item: 'Consumer Electronics/Phones', percentage: '32.1%' }, { item: 'Textiles & Apparel', percentage: '14.4%' }, { item: 'Toys & Hardware', percentage: '8.9%' } ]
+      },
+      'China': {
+         exports: [ { item: 'Consumer Electronics/Phones', percentage: '32.1%' }, { item: 'Textiles & Apparel', percentage: '14.4%' }, { item: 'Toys & Hardware', percentage: '8.9%' } ],
+         imports: [ { item: 'Soybeans & Agriculture', percentage: '18.2%' }, { item: 'Civil Aircraft Parts', percentage: '14.1%' }, { item: 'Semiconductor Machinery', percentage: '11.5%' } ]
+      }
     },
-    'Russia': {
-      exports: [ { item: 'Crude Petroleum', partners: ['China (48%)', 'India (32%)', 'Turkey (8%)'] }, { item: 'Refined Petroleum', partners: ['China (18%)', 'Turkey (14%)', 'United Arab Emirates (11%)'] }, { item: 'Natural Gas & Coal', partners: ['China (26%)', 'Turkey (18%)', 'Germany (4%)'] } ],
-      imports: [ { item: 'Motor Vehicles & Parts', partners: ['China (71%)', 'Germany (4%)', 'South Korea (2%)'] }, { item: 'Broadcasting Equipment', partners: ['China (74%)', 'Vietnam (8%)', 'Malaysia (3%)'] }, { item: 'Packaged Medicaments', partners: ['Germany (22%)', 'France (12%)', 'Italy (9%)'] } ]
+    'India-Russia': {
+      'India': {
+         exports: [ { item: 'Pharmaceuticals', percentage: '28.1%' }, { item: 'Machinery & Steel', percentage: '16.4%' }, { item: 'Organic Chemicals', percentage: '14.2%' } ],
+         imports: [ { item: 'Crude Petroleum Oil', percentage: '68.5%' }, { item: 'Coal Briquettes', percentage: '12.4%' }, { item: 'Fertilizers', percentage: '8.2%' } ]
+      },
+      'Russia': {
+         exports: [ { item: 'Crude Petroleum Oil', percentage: '68.5%' }, { item: 'Coal Briquettes', percentage: '12.4%' }, { item: 'Fertilizers', percentage: '8.2%' } ],
+         imports: [ { item: 'Pharmaceuticals', percentage: '28.1%' }, { item: 'Machinery & Steel', percentage: '16.4%' }, { item: 'Organic Chemicals', percentage: '14.2%' } ]
+      }
     },
-    'Germany': {
-      exports: [ { item: 'Motor Vehicles & Parts', partners: ['United States (15%)', 'China (12%)', 'United Kingdom (8%)'] }, { item: 'Packaged Medicaments', partners: ['United States (21%)', 'Switzerland (9%)', 'Netherlands (7%)'] }, { item: 'Industrial Machinery', partners: ['China (11%)', 'United States (10%)', 'France (8%)'] } ],
-      imports: [ { item: 'Motor Vehicles & Parts', partners: ['Poland (14%)', 'Czechia (12%)', 'Spain (9%)'] }, { item: 'Crude Petroleum & Gas', partners: ['Norway (38%)', 'United States (18%)', 'Netherlands (12%)'] }, { item: 'Broadcasting Equipment', partners: ['China (28%)', 'Poland (8%)', 'Czechia (7%)'] } ]
-    },
-    'Japan': {
-      exports: [ { item: 'Motor Vehicles & Parts', partners: ['United States (29%)', 'China (15%)', 'Australia (9%)'] }, { item: 'Integrated Circuits', partners: ['China (32%)', 'Taiwan (16%)', 'South Korea (11%)'] }, { item: 'Industrial Machinery', partners: ['China (24%)', 'United States (18%)', 'South Korea (8%)'] } ],
-      imports: [ { item: 'Crude Petroleum', partners: ['Saudi Arabia (41%)', 'United Arab Emirates (34%)', 'Kuwait (8%)'] }, { item: 'Petroleum Gas', partners: ['Australia (42%)', 'Malaysia (12%)', 'Qatar (10%)'] }, { item: 'Broadcasting Equipment', partners: ['China (52%)', 'Taiwan (8%)', 'Vietnam (7%)'] } ]
-    },
-    'United Kingdom': {
-      exports: [ { item: 'Cars & Gas Turbines', partners: ['United States (18%)', 'Germany (11%)', 'China (9%)'] }, { item: 'Gold & Platinum', partners: ['Switzerland (24%)', 'United Arab Emirates (16%)', 'United States (12%)'] }, { item: 'Packaged Medicaments', partners: ['United States (28%)', 'Germany (12%)', 'Switzerland (8%)'] } ],
-      imports: [ { item: 'Cars & Vehicle Parts', partners: ['Germany (32%)', 'Spain (15%)', 'Belgium (9%)'] }, { item: 'Gold & Precious Metals', partners: ['Canada (22%)', 'Switzerland (18%)', 'United States (14%)'] }, { item: 'Refined Petroleum', partners: ['Netherlands (26%)', 'Norway (21%)', 'Belgium (12%)'] } ]
-    },
-    'France': {
-      exports: [ { item: 'Aerospace & Transport', partners: ['Germany (16%)', 'United States (14%)', 'China (9%)'] }, { item: 'Packaged Medicaments', partners: ['Germany (15%)', 'United States (12%)', 'Italy (8%)'] }, { item: 'Beauty Products & Wine', partners: ['United States (19%)', 'Germany (14%)', 'United Kingdom (11%)'] } ],
-      imports: [ { item: 'Cars & Vehicle Parts', partners: ['Germany (28%)', 'Spain (16%)', 'Italy (12%)'] }, { item: 'Petroleum & Gas', partners: ['United States (24%)', 'Belgium (16%)', 'Norway (14%)'] }, { item: 'Packaged Medicaments', partners: ['Germany (22%)', 'Belgium (14%)', 'Ireland (11%)'] } ]
-    },
-    'Brazil': {
-      exports: [ { item: 'Soybeans & Iron Ore', partners: ['China (68%)', 'United States (5%)', 'Argentina (4%)'] }, { item: 'Crude Petroleum', partners: ['China (48%)', 'United States (12%)', 'India (8%)'] }, { item: 'Raw Sugar & Meat', partners: ['China (22%)', 'United States (14%)', 'Netherlands (8%)'] } ],
-      imports: [ { item: 'Refined Petroleum', partners: ['United States (42%)', 'India (14%)', 'Russia (11%)'] }, { item: 'Fertilizers', partners: ['Russia (24%)', 'China (18%)', 'Canada (14%)'] }, { item: 'Vehicle Parts & Machinery', partners: ['China (28%)', 'United States (18%)', 'Germany (9%)'] } ]
-    },
-    'Canada': {
-      exports: [ { item: 'Crude Petroleum', partners: ['United States (96%)', 'China (1%)', 'United Kingdom (1%)'] }, { item: 'Cars & Vehicle Parts', partners: ['United States (92%)', 'Mexico (3%)', 'China (1%)'] }, { item: 'Gold & Wood', partners: ['United States (68%)', 'United Kingdom (12%)', 'China (4%)'] } ],
-      imports: [ { item: 'Cars & Vehicle Parts', partners: ['United States (68%)', 'Mexico (14%)', 'Japan (6%)'] }, { item: 'Refined Petroleum & Gas', partners: ['United States (72%)', 'Netherlands (6%)', 'Saudi Arabia (4%)'] }, { item: 'Delivery Trucks', partners: ['United States (82%)', 'Mexico (12%)', 'China (2%)'] } ]
-    },
-    'Australia': {
-      exports: [ { item: 'Iron Ore & Minerals', partners: ['China (81%)', 'Japan (8%)', 'South Korea (6%)'] }, { item: 'Coal Briquettes', partners: ['Japan (26%)', 'India (21%)', 'China (18%)'] }, { item: 'Petroleum Gas', partners: ['Japan (38%)', 'China (32%)', 'South Korea (11%)'] } ],
-      imports: [ { item: 'Refined Petroleum', partners: ['Singapore (28%)', 'South Korea (22%)', 'Malaysia (14%)'] }, { item: 'Cars', partners: ['Japan (34%)', 'Thailand (21%)', 'South Korea (12%)'] }, { item: 'Broadcasting Equipment', partners: ['China (62%)', 'Vietnam (11%)', 'United States (6%)'] } ]
-    },
-    'Saudi Arabia': {
-      exports: [ { item: 'Crude Petroleum', partners: ['China (28%)', 'Japan (16%)', 'India (12%)'] }, { item: 'Refined Petroleum', partners: ['China (18%)', 'India (14%)', 'Singapore (11%)'] }, { item: 'Ethylene Polymers', partners: ['China (32%)', 'India (12%)', 'Turkey (8%)'] } ],
-      imports: [ { item: 'Cars', partners: ['China (22%)', 'Japan (18%)', 'United States (12%)'] }, { item: 'Broadcasting Equipment', partners: ['China (58%)', 'Vietnam (14%)', 'India (6%)'] }, { item: 'Refined Petroleum', partners: ['United Arab Emirates (28%)', 'India (21%)', 'Greece (12%)'] } ]
+    'India-United Arab Emirates': {
+      'India': {
+         exports: [ { item: 'Refined Petroleum', percentage: '22.1%' }, { item: 'Jewelry & Diamonds', percentage: '18.5%' }, { item: 'Apparel', percentage: '8.2%' } ],
+         imports: [ { item: 'Crude Petroleum', percentage: '48.2%' }, { item: 'Raw Gold', percentage: '21.5%' }, { item: 'Plastics', percentage: '6.4%' } ]
+      },
+      'United Arab Emirates': {
+         exports: [ { item: 'Crude Petroleum', percentage: '48.2%' }, { item: 'Raw Gold', percentage: '21.5%' }, { item: 'Plastics', percentage: '6.4%' } ],
+         imports: [ { item: 'Refined Petroleum', percentage: '22.1%' }, { item: 'Jewelry & Diamonds', percentage: '18.5%' }, { item: 'Apparel', percentage: '8.2%' } ]
+      }
     }
   };
 
-  const getTradeData = (origin, target, allCountries) => {
-    if (!origin || !target || !allCountries) return { exports: [], imports: [] };
+  const getTradeData = (origin, target) => {
+    if (!origin || !target) return { exports: [], imports: [] };
     
-    // Serve accurate real-world macroeconomics for major players
-    if (REAL_TRADE_PROFILES[target]) {
-        return REAL_TRADE_PROFILES[target];
+    // Serve accurate real-world bilateral macroeconomics
+    const key = [origin, target].sort().join('-');
+    if (BILATERAL_TRADE_DB[key] && BILATERAL_TRADE_DB[key][origin]) {
+        return BILATERAL_TRADE_DB[key][origin];
     }
     
-    // Deterministic selection based on country names
+    // Deterministic selection based on exact bilateral pairs for unsupported nodes
     const hash = (str) => {
         let h = 0;
         for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
         return Math.abs(h);
     };
     
-    const combinedHash = hash(origin + target);
+    const combinedHash = hash(key); 
     
     const numExports = (combinedHash % 2) + 2; 
     const numImports = ((combinedHash >> 1) % 2) + 2;
     
     const shuffledGoods = [...TRADE_GOODS].sort((a,b) => hash(a + combinedHash) - hash(b + combinedHash));
     
-    const exportsListGoods = shuffledGoods.slice(0, numExports);
-    const importsListGoods = shuffledGoods.slice(numExports, numExports + numImports);
-    
-    // Partner extraction logic
-    const getPartners = (itemStr) => {
-        const itemHash = hash(target + itemStr);
-        const pCount = (itemHash % 3) + 1; // 1 to 3 arbitrary partners
-        const shuffledC = [...allCountries].filter(c => c.properties.ADMIN !== target).sort((a,b) => hash(a.properties.ADMIN + itemHash) - hash(b.properties.ADMIN + itemHash));
-        return shuffledC.slice(0, pCount).map(c => c.properties.ADMIN);
+    const generatePercentage = (baseHash, index) => {
+       const raw = (baseHash % (35 - index * 10)) + 5; 
+       return `${raw}.${baseHash % 9}%`;
     };
 
-    const exportsList = exportsListGoods.map(good => ({ item: good, partners: getPartners(good + "EXP") }));
-    const importsList = importsListGoods.map(good => ({ item: good, partners: getPartners(good + "IMP") }));
+    const exportsList = shuffledGoods.slice(0, numExports).map((good, i) => ({ 
+        item: good, 
+        percentage: generatePercentage(hash(good + "EXP" + key), i) 
+    }));
+    
+    const importsList = shuffledGoods.slice(numExports, numExports + numImports).map((good, i) => ({ 
+        item: good, 
+        percentage: generatePercentage(hash(good + "IMP" + key), i) 
+    }));
 
     return { exports: exportsList, imports: importsList };
   };
@@ -206,7 +210,7 @@ export function IntelligenceGraph({ userCountry }) {
         newArcs.push({
             startLat: sourceLat, startLng: sourceLng,
             endLat: targetLat, endLng: targetLng,
-            color: '#34c759', type: 'Ally', targetName: f.properties.ADMIN
+            color: theme === 'light' ? '#2563eb' : '#06b6d4', type: 'Ally', targetName: f.properties.ADMIN
         });
     });
 
@@ -215,28 +219,28 @@ export function IntelligenceGraph({ userCountry }) {
         newArcs.push({
             startLat: sourceLat, startLng: sourceLng,
             endLat: targetLat, endLng: targetLng,
-            color: '#ff3b30', type: 'Threat', targetName: e.properties.ADMIN
+            color: theme === 'light' ? '#e11d48' : '#e81cff', type: 'Threat', targetName: e.properties.ADMIN
         });
     });
 
     setArcsData(newArcs);
-    const trade = getTradeData(userCountry || 'Global', polygon.properties.ADMIN, countries.features);
+    const trade = getTradeData(userCountry || 'Global', polygon.properties.ADMIN);
     setSelectedCountry({ name: polygon.properties.ADMIN, friends, enemies, trade });
   };
 
   return (
-    <div className="graph-container" style={{ display: 'flex', width: '100%', height: 'calc(100vh - 80px)', backgroundColor: '#050505', color: '#0f0' }}>
+    <div className="graph-container" style={{ display: 'flex', width: '100%', height: 'calc(100vh - 80px)', backgroundColor: 'var(--bg-color)', color: 'var(--text-primary)' }}>
       
       {/* Globe Viewport */}
       <div className="globe-viewport" style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <div className="graph-header" style={{ position: 'absolute', top: '24px', left: '24px', zIndex: 10, display: 'flex', justifyContent: 'space-between', width: 'calc(100% - 48px)' }}>
           <div className="title-group" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <h2 style={{ margin: 0, color: '#ffd700', fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '2px' }}>Global Topology</h2>
-            <span style={{ border: '1px solid #0f0', color: '#0f0', padding: '4px 12px', fontSize: '0.75rem', fontWeight: 'bold' }}>192-NODE ACTIVE</span>
+            <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.5px' }}>Global Topology</h2>
+            <span style={{ background: 'rgba(37, 99, 235, 0.1)', color: 'var(--accent-blue)', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 'bold', borderRadius: '12px' }}>192-NODE ACTIVE</span>
           </div>
           <div className="controls-group" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ color: '#0f0', fontSize: '0.9rem' }}>Origin: <strong style={{color: '#ffd700'}}>{userCountry}</strong></span>
-            <button style={{ background: 'transparent', border: '1px solid #ffd700', color: '#ffd700', padding: '6px 12px', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Origin: <strong style={{color: 'var(--accent-blue)'}}>{userCountry}</strong></span>
+            <button style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', padding: '8px 16px', cursor: 'pointer', display: 'flex', gap: '6px', alignItems: 'center', borderRadius: '12px', boxShadow: 'var(--card-shadow)' }}>
               <Filter size={14}/> Filter
             </button>
           </div>
@@ -245,20 +249,20 @@ export function IntelligenceGraph({ userCountry }) {
         <div className="graph-wrapper" style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Globe
             ref={globeRef}
-            width={dimensions.width - (selectedCountry ? 350 : 0)} 
+            width={dimensions.width - (selectedCountry ? 360 : 0)} 
             height={dimensions.height}
-            backgroundColor="rgba(5,5,5,1)"
-            globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+            backgroundColor="rgba(0,0,0,0)"
+            globeImageUrl={theme === 'light' ? "https://unpkg.com/three-globe/example/img/earth-day.jpg" : "https://unpkg.com/three-globe/example/img/earth-dark.jpg"}
             polygonsData={countries.features}
             polygonAltitude={d => d === hoverD ? 0.02 : 0.01}
             polygonCapColor={d => 
-               selectedCountry && selectedCountry.name === d.properties.ADMIN ? 'rgba(255, 215, 0, 0.6)' : // Yellow Selected
-               selectedCountry && selectedCountry.friends.includes(d) ? 'rgba(0, 255, 0, 0.4)' : // Green Friend
-               selectedCountry && selectedCountry.enemies.includes(d) ? 'rgba(255, 0, 0, 0.4)' : // Red Enemy
-               d === hoverD ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 50, 0, 0.15)' // Default dark green
+               selectedCountry && selectedCountry.name === d.properties.ADMIN ? (theme === 'light' ? 'rgba(37, 99, 235, 0.4)' : 'rgba(99, 102, 241, 0.6)') : 
+               selectedCountry && selectedCountry.friends.includes(d) ? (theme === 'light' ? 'rgba(52, 211, 153, 0.4)' : 'rgba(6, 182, 212, 0.4)') : 
+               selectedCountry && selectedCountry.enemies.includes(d) ? (theme === 'light' ? 'rgba(225, 29, 72, 0.4)' : 'rgba(232, 28, 255, 0.4)') : 
+               d === hoverD ? 'rgba(120, 120, 120, 0.2)' : (theme === 'light' ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)') 
             }
-            polygonSideColor={() => 'rgba(0, 255, 0, 0.05)'}
-            polygonStrokeColor={() => 'rgba(0, 255, 0, 0.3)'}
+            polygonSideColor={() => theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'}
+            polygonStrokeColor={() => theme === 'light' ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.1)'}
             onPolygonHover={setHoverD}
             onPolygonClick={handlePolygonClick}
             arcsData={arcsData}
@@ -272,8 +276,8 @@ export function IntelligenceGraph({ userCountry }) {
         </div>
 
         {hoverD && !selectedCountry && (
-          <div style={{position: 'absolute', bottom: '24px', left: '24px', zIndex: 100, background: '#000', padding: '12px 20px', border: '1px solid #0f0', color: '#0f0'}}>
-             {hoverD.properties.ADMIN} <span style={{color: '#ffd700', fontSize: '0.8rem'}}>(Click)</span>
+          <div style={{position: 'absolute', bottom: '24px', left: '24px', zIndex: 100, background: 'var(--card-bg)', padding: '12px 20px', border: '1px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '12px', boxShadow: 'var(--card-shadow)', fontWeight: 500}}>
+             {hoverD.properties.ADMIN} <span style={{color: 'var(--text-secondary)', fontSize: '0.8rem'}}>(Click)</span>
           </div>
         )}
       </div>
@@ -283,48 +287,54 @@ export function IntelligenceGraph({ userCountry }) {
         {selectedCountry && (
           <motion.div 
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 350, opacity: 1 }}
+            animate={{ width: 360, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             style={{ 
-              height: '100%', 
-              background: '#0a0a0a', 
-              borderLeft: '2px solid #ffd700',
+              height: 'calc(100% - 32px)', 
+              background: 'var(--card-bg)', 
+              borderRadius: '24px',
+              border: '1px solid var(--card-border)',
+              boxShadow: 'var(--card-shadow)',
+              margin: '16px',
               overflowY: 'auto',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              zIndex: 10
             }}
           >
-            <div style={{ padding: '24px', width: '350px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid #0f0', paddingBottom: '12px' }}>
-                 <h4 style={{ margin: 0, color: '#ffd700', fontSize: '1.2rem', textTransform: 'uppercase' }}>{selectedCountry.name}</h4>
-                 <button onClick={() => { setSelectedCountry(null); setArcsData([]); globeRef.current.controls().autoRotate = true; }} style={{ background:'transparent', border:'none', color:'#0f0', cursor:'pointer'}}><X size={20}/></button>
+            <div style={{ padding: '24px', width: '360px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid var(--card-border)', paddingBottom: '16px' }}>
+                 <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: 700 }}>{selectedCountry.name}</h4>
+                 <button onClick={() => { setSelectedCountry(null); setArcsData([]); globeRef.current.controls().autoRotate = true; }} style={{ background:'transparent', border:'none', color:'var(--text-secondary)', cursor:'pointer'}}><X size={20}/></button>
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#06b6d4', fontWeight: 'bold', marginBottom: '12px', textTransform: 'uppercase' }}><Activity size={16} /> Global Trade Network</div>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-blue)', fontWeight: 600, marginBottom: '16px' }}><Activity size={16} /> Bilateral Trade Network</div>
                  {selectedCountry.name === userCountry ? (
-                     <div style={{ color: '#555' }}>Domestic Market - Internal Circulation</div>
+                     <div style={{ color: '#f43f5e', fontSize: '0.95rem', fontWeight: 500, textAlign: 'center', marginTop: '20px', padding: '16px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: '12px' }}>
+                          Same Countries Selected. Select different.
+                     </div>
                  ) : (
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                        <div>
-                         <div style={{ fontSize: '0.8rem', color: '#0f0', marginBottom: '6px', fontWeight: 'bold' }}>EXPORTS (Give)</div>
+                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Exports to {selectedCountry.name}</div>
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                            {(selectedCountry.trade?.exports || []).map((t, i) => (
-                             <div key={i} style={{ padding: '8px 12px', background: 'rgba(0,255,0,0.05)', borderLeft: '3px solid #0f0', color: '#fff', fontSize: '0.9rem' }}>
-                               <strong>{t.item}</strong>
-                               <div style={{ color: '#888', fontSize: '0.75rem', marginTop: '4px' }}>To: {t.partners.join(', ')}</div>
+                             <div key={i} style={{ padding: '12px', background: 'var(--bg-color)', borderLeft: '3px solid var(--accent-blue)', color: 'var(--text-primary)', fontSize: '0.9rem', borderRadius: '8px' }}>
+                               <strong style={{fontWeight: 600}}>{t.item}</strong>
+                               <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>Share of Trade: <strong style={{color:'var(--accent-blue)'}}>{t.percentage}</strong></div>
                              </div>
                            ))}
                          </div>
                        </div>
                        
                        <div>
-                         <div style={{ fontSize: '0.8rem', color: '#ffd700', marginBottom: '6px', fontWeight: 'bold' }}>IMPORTS (Take)</div>
+                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Imports from {selectedCountry.name}</div>
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                            {(selectedCountry.trade?.imports || []).map((t, i) => (
-                             <div key={i} style={{ padding: '8px 12px', background: 'rgba(255,215,0,0.05)', borderLeft: '3px solid #ffd700', color: '#fff', fontSize: '0.9rem' }}>
-                               <strong>{t.item}</strong>
-                               <div style={{ color: '#888', fontSize: '0.75rem', marginTop: '4px' }}>From: {t.partners.join(', ')}</div>
+                             <div key={i} style={{ padding: '12px', background: 'var(--bg-color)', borderLeft: '3px solid var(--accent-purple)', color: 'var(--text-primary)', fontSize: '0.9rem', borderRadius: '8px' }}>
+                               <strong style={{fontWeight: 600}}>{t.item}</strong>
+                               <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '4px' }}>Share of Trade: <strong style={{color:'var(--accent-purple)'}}>{t.percentage}</strong></div>
                              </div>
                            ))}
                          </div>

@@ -19,11 +19,28 @@ const generateCountryData = (country) => {
   if (diplomaticScore < 40) { status = 'Tense'; color = '#ff3b30'; }
   else if (diplomaticScore < 70) { status = 'Developing'; color = '#f59e0b'; }
 
+  const budgets = {
+    'United States': '$997.0 Billion',
+    'China': '$314.0 Billion',
+    'Russia': '$149.0 Billion',
+    'Germany': '$88.5 Billion',
+    'India': '$86.1 Billion',
+    'United Kingdom': '$81.8 Billion',
+    'Saudi Arabia': '$80.3 Billion',
+    'France': '$64.7 Billion',
+    'Ukraine': '$64.7 Billion',
+    'Japan': '$55.3 Billion',
+    'South Korea': '$46.8 Billion',
+    'Israel': '$46.5 Billion'
+  };
+  
+  const defenseBudget = budgets[country] || `$${Math.abs(hash % 30) + 10}.5 Billion`;
+
   return {
     inflation: `${inflation}%`,
     diplomaticStatus: status,
     diplomaticColor: color,
-    alliesCount: Math.abs(hash % 50) + 12,
+    defenseBudget: defenseBudget,
     threatLevel: status === 'Tense' ? 'Elevated (L4)' : 'Nominal (L2)'
   };
 };
@@ -105,9 +122,9 @@ export function Dashboard({ userCountry }) {
   }, [userCountry]);
 
   const summaryCards = [
-    { title: 'Diplomatic Posture', value: data.diplomaticStatus, icon: Globe2, color: data.diplomaticColor },
-    { title: 'National Inflation YoY', value: data.inflation, icon: TrendingUp, color: '#06b6d4' },
-    { title: 'Registered Allies', value: data.alliesCount, icon: Users, color: '#8b5cf6' },
+    { title: 'Diplomatic Posture', value: data.diplomaticStatus, icon: Globe2, color: 'var(--accent-blue)' },
+    { title: 'National Inflation YoY', value: data.inflation, icon: TrendingUp, color: 'var(--text-secondary)' },
+    { title: 'Annual Defense Budget', value: data.defenseBudget, icon: ShieldAlert, color: 'var(--text-primary)' },
   ];
 
   return (
@@ -117,35 +134,64 @@ export function Dashboard({ userCountry }) {
         <p>Real-time localized synthesis of cross-domain intelligence parameters.</p>
       </header>
 
-      <div className="summary-grid">
+      <div className="bento-dashboard-grid">
         {summaryCards.map((card, idx) => (
           <motion.div 
             key={idx}
-            className="summary-card glass-panel"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
+            className="bento-card bento-card-summary"
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30, delay: idx * 0.1 }}
           >
             <div className="card-header">
               <span className="card-title">{card.title}</span>
               <card.icon size={20} style={{ color: card.color }} />
             </div>
-            <div className="card-value" style={{ textShadow: `0 0 10px ${card.color}40`, color: card.color }}>
+            <div className="card-value" style={{ color: card.color }}>
               {card.value}
             </div>
-            <div className="card-sparkline" style={{ background: `linear-gradient(90deg, transparent, ${card.color}20, transparent)` }}></div>
           </motion.div>
         ))}
-      </div>
 
-      <div className="dashboard-main-grid">
         <motion.div 
-          className="dashboard-module glass-panel large-module"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
+          className="bento-card bento-card-news"
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.3 }}
         >
-          <h3>{userCountry ? `${userCountry} Historical Trajectory` : 'Global Historical Trajectory'}</h3>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--card-border)', paddingBottom: '12px'}}>
+             <Newspaper size={20} style={{color: 'var(--accent-blue)'}} />
+             <h3 style={{border: 'none', margin: 0, padding: 0, color: 'var(--text-primary)', fontSize: '1.1rem'}}>Breaking News</h3>
+          </div>
+          <ul className="alert-list">
+            {loadingNews ? (
+                <div style={{color: 'var(--text-secondary)', padding: '16px'}}>Tapping Global Matrix...</div>
+            ) : liveNews.map((n, i) => (
+              <motion.li 
+                key={n.id} 
+                className="alert-item"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + (i * 0.1) }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <a href={n.url} target="_blank" rel="noopener noreferrer" className="news-link">
+                     {n.title}
+                   </a>
+                   <span className="news-type">{n.type}</span>
+                </div>
+              </motion.li>
+            ))}
+          </ul>
+        </motion.div>
+
+        <motion.div 
+          className="bento-card bento-card-history"
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.4 }}
+        >
+          <h3 className="bento-header">{userCountry ? `${userCountry} Historical Trajectory` : 'Global Historical Trajectory'}</h3>
           <div className="history-graph-container">
              <div className="history-graph-line"></div>
              <div className="history-nodes">
@@ -160,33 +206,6 @@ export function Dashboard({ userCountry }) {
                ))}
              </div>
           </div>
-        </motion.div>
-
-        <motion.div 
-          className="dashboard-module glass-panel"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--card-border)', paddingBottom: '12px'}}>
-             <Newspaper size={20} className="text-cyan" />
-             <h3 style={{border: 'none', margin: 0, padding: 0}}>Breaking: {userCountry}</h3>
-          </div>
-          <ul className="alert-list">
-            {loadingNews ? (
-                <div style={{color: 'var(--text-secondary)', padding: '16px'}}>Tapping Global News Matrix...</div>
-            ) : liveNews.map(n => (
-              <li key={n.id} className="alert-item low">
-                <span className="pulse"></span>
-                <span style={{flex: 1}}>
-                   <a href={n.url} target="_blank" rel="noopener noreferrer" style={{color: '#fff', textDecoration: 'none'}}>
-                     {n.title}
-                   </a>
-                </span>
-                <span style={{fontSize: '0.75rem', opacity: 0.6}}>{n.type}</span>
-              </li>
-            ))}
-          </ul>
         </motion.div>
       </div>
     </div>

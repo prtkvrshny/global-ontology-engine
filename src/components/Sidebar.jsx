@@ -1,50 +1,47 @@
 import React from 'react';
-import { Home, Share2, Activity, Settings, Shield, Globe, LogOut, Mic } from 'lucide-react';
+import { Home, Share2, Activity, Globe, Mic, Settings, LogOut, Sun, Moon, BarChart3 } from 'lucide-react';
 import clsx from 'clsx';
 import './Sidebar.css';
 
 const navItems = [
   { id: 'dashboard', icon: Home, label: 'Dashboard' },
-  { id: 'graph', icon: Share2, label: 'Intelligence Graph' },
-  { id: 'feeds', icon: Activity, label: 'Live Feeds' },
-  { id: 'defense', icon: Shield, label: 'Defense Intel' },
-  { id: 'climate', icon: Globe, label: 'Climate & Geo' },
-  { id: 'voice', icon: Mic, label: 'Voice Intel' },
+  { id: 'graph', icon: Share2, label: 'Intelligence' }, 
+  { id: 'feeds', icon: Activity, label: 'Feeds' },
+  { id: 'mastergraph', icon: BarChart3, label: 'Master Graph' },
+  { id: 'climate', icon: Globe, label: 'Climate' },
+  { id: 'voice', icon: Mic, label: 'Voice' },
 ];
 
-export function Sidebar({ currentView, setCurrentView, onOpenSettings, onLogout }) {
+export function Sidebar({ currentView, setCurrentView, onOpenSettings, onLogout, theme, setTheme }) {
   return (
-    <aside className="global-sidebar glass-panel">
-      <div className="brand-section">
-        <div className="brand-logo">
-          <div className="logo-orb"></div>
-        </div>
-        <h2 className="brand-title">GOE Core</h2>
-      </div>
-
-      <nav className="nav-menu">
+    <nav className="bottom-dock bento-card">
+      <div className="dock-items">
         {navItems.map(({ id, icon: Icon, label }) => (
           <button
             key={id}
-            className={clsx('nav-item', currentView === id && 'active')}
+            className={clsx('dock-item', currentView === id && 'active')}
             onClick={() => setCurrentView(id)}
           >
-            <Icon size={20} className="nav-icon" />
-            <span className="nav-label">{label}</span>
+            <Icon size={22} className="dock-icon" />
+            <span className="dock-label">{label}</span>
           </button>
         ))}
-      </nav>
+        
+        <div className="dock-divider"></div>
 
-      <div className="sidebar-footer">
-        <button className="nav-item" onClick={onOpenSettings}>
-          <Settings size={20} className="nav-icon" />
-          <span className="nav-label">Settings</span>
+        <button className="dock-item" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? <Sun size={22} className="dock-icon" /> : <Moon size={22} className="dock-icon" />}
         </button>
-        <button className="nav-item" onClick={onLogout} style={{color: '#ff3b30', marginTop: '4px'}}>
-          <LogOut size={20} className="nav-icon" />
-          <span className="nav-label">End Session</span>
+
+        <button className="dock-item" onClick={onOpenSettings}>
+          <Settings size={22} className="dock-icon" />
+          <span className="dock-label">Settings</span>
+        </button>
+        <button className="dock-item danger" onClick={onLogout}>
+          <LogOut size={22} className="dock-icon" />
+          <span className="dock-label">Logout</span>
         </button>
       </div>
-    </aside>
+    </nav>
   );
 }

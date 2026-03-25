@@ -1,5 +1,6 @@
 .climate-container {
   padding: 32px;
+  padding-bottom: 120px; /* Buffer for Bottom Dock */
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -32,7 +33,7 @@
 .metric-data .value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
@@ -53,7 +54,7 @@
 }
 
 .heatmap-header h3 {
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 24px;
   border-bottom: 1px solid var(--card-border);
   padding-bottom: 12px;
@@ -62,10 +63,10 @@
 .heatmap-viz {
   flex: 1;
   position: relative;
-  background: #111;
+  background: var(--bg-color);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
 }
 
 .hm-grad {

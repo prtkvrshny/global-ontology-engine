@@ -3,7 +3,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden; /* Contains graph boundaries */
+  overflow: hidden; 
+  padding-bottom: 120px; /* Buffer for Bottom Dock */
 }
 
 .top-nav {

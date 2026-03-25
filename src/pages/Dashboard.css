@@ -17,7 +17,7 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(to right, #fff, var(--text-secondary));
+  background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -27,73 +27,52 @@
   font-size: 1rem;
 }
 
-.summary-grid {
+.bento-dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(140px, auto);
   gap: 24px;
-  margin-bottom: 32px;
+  width: 100%;
+  padding-bottom: 120px; /* Buffer for Bottom Dock */
 }
 
-.summary-card {
+.bento-card-summary {
+  grid-column: span 1;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  justify-content: center;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.card-title {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.card-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.card-sparkline {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-}
-
-.dashboard-main-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-}
-
-.dashboard-module {
+.bento-card-news {
+  grid-column: span 1;
+  grid-row: span 2;
   padding: 24px;
-  min-height: 300px;
+  overflow-y: auto;
 }
 
-.dashboard-module h3 {
+.bento-card-history {
+  grid-column: span 3;
+  grid-row: span 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bento-header {
   font-size: 1.1rem;
   margin-bottom: 24px;
-  color: #fff;
+  color: var(--text-primary);
   border-bottom: 1px solid var(--card-border);
   padding-bottom: 12px;
+  font-weight: 600;
 }
 
 .history-graph-container {
   position: relative;
-  height: 200px;
-  margin-top: 40px;
+  flex: 1;
+  min-height: 160px;
+  margin-top: 20px;
   width: 90%;
   margin-left: 5%;
 }
@@ -104,7 +83,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--card-border);
   z-index: 1;
 }
 
@@ -137,16 +116,16 @@
 .history-dot {
   width: 12px;
   height: 12px;
-  background: var(--accent-cyan);
+  background: var(--text-secondary);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--accent-cyan);
-  border: 2px solid #000;
-  transition: transform 0.2s;
+  border: 2px solid var(--card-bg);
+  transition: transform 0.2s, background 0.2s;
 }
 
 .history-node:hover .history-dot {
   transform: scale(1.5);
-  background: #fff;
+  background: var(--accent-blue);
+  box-shadow: 0 0 16px var(--accent-glow);
 }
 
 .history-content {
@@ -158,9 +137,9 @@
 }
 
 .history-year {
-  font-family: monospace;
+  font-family: inherit;
   font-weight: bold;
-  color: var(--accent-cyan);
+  color: var(--text-primary);
   font-size: 1.1rem;
   margin-bottom: 4px;
 }
@@ -180,32 +159,38 @@
 
 .alert-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.9rem;
+  flex-direction: column;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  border-left: 3px solid transparent;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
 }
 
-.alert-item.high { border-left-color: #ff3b30; }
-.alert-item.moderate { border-left-color: #f59e0b; }
-.alert-item.low { border-left-color: #06b6d4; }
-
-.pulse {
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.news-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition: color 0.2s;
 }
 
-.high .pulse { background: #ff3b30; box-shadow: 0 0 8px #ff3b30; }
-.moderate .pulse { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-.low .pulse { background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
+.news-link:hover {
+  color: var(--accent-blue);
+}
+
+.news-type {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
 
 @media (max-width: 1024px) {
-  .dashboard-main-grid {
+  .bento-dashboard-grid {
     grid-template-columns: 1fr;
+  }
+  .bento-card-summary, .bento-card-news, .bento-card-history {
+    grid-column: span 1;
   }
 }

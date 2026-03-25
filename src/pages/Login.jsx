@@ -27,34 +27,70 @@ const ALL_COUNTRIES = [
 ];
 
 export function Login({ onLogin }) {
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [country, setCountry] = useState('United States');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if(email && password && country) {
-      onLogin(country);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!email || !password || (!isLoginMode && !country)) {
+      setErrorMsg('All credential fields are required.');
+      return;
+    }
+
+    const storedData = localStorage.getItem('registeredUsers');
+    let users = storedData ? JSON.parse(storedData) : [];
+
+    if (isLoginMode) {
+      // Login Flow
+      const foundUser = users.find(u => u.email === email && u.password === password);
+      if (foundUser) {
+        onLogin(foundUser.country);
+      } else {
+        setErrorMsg('Unauthorized operative or invalid access code.');
+      }
+    } else {
+      // Sign-Up Flow
+      const existingUser = users.find(u => u.email === email);
+      if (existingUser) {
+        setErrorMsg('Operative email already registered in matrix. Proceed to Login.');
+      } else {
+        users.push({ email, password, country });
+        localStorage.setItem('registeredUsers', JSON.stringify(users));
+        setSuccessMsg('Operative registered successfully. Initializing session...');
+        setTimeout(() => {
+           onLogin(country); // Immediately log them in after sign up
+        }, 1000);
+      }
     }
   };
 
   return (
     <div className="login-wrapper">
-      <div className="login-bg-grid"></div>
+      <div className="login-glow-orb"></div>
       
       <motion.div 
-        className="login-card glass-panel"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        className="login-card"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 350, damping: 25 }}
       >
         <div className="login-header">
            <div className="logo-orb large"></div>
-           <h2>GOE Core Access</h2>
-           <p>Global Ontology Engine Authentication Interface</p>
+           <h2>{isLoginMode ? 'GOE Core Access' : 'Operative Registration'}</h2>
+           <p>{isLoginMode ? 'Global Ontology Engine Authentication Interface' : 'Establish unique secure local origin link'}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {errorMsg && <div className="auth-message error">{errorMsg}</div>}
+          {successMsg && <div className="auth-message success">{successMsg}</div>}
+
           <div className="form-group">
             <label>Operative Email</label>
             <input 
@@ -77,23 +113,35 @@ export function Login({ onLogin }) {
             />
           </div>
 
-          <div className="form-group">
-            <label>Origin Country / Designation</label>
-            <div className="select-wrapper">
-              <select 
-                value={country} 
-                onChange={(e) => setCountry(e.target.value)}
-              >
-                {ALL_COUNTRIES.map(c => <option key={c} value={c} style={{color: '#000'}}>{c}</option>)}
-              </select>
-            </div>
-          </div>
+          {!isLoginMode && ( // Only demand country dropdown actively during Sign-Up!
+             <div className="form-group">
+               <label>Origin Country / Designation</label>
+               <div className="select-wrapper">
+                 <select 
+                   value={country} 
+                   onChange={(e) => setCountry(e.target.value)}
+                 >
+                   {ALL_COUNTRIES.map(c => <option key={c} value={c} style={{color: '#000'}}>{c}</option>)}
+                 </select>
+               </div>
+             </div>
+          )}
 
           <button type="submit" className="login-btn">
-            <ShieldCheck size={18} />
-            <span>Initiate Secure Uplink</span>
+            {isLoginMode ? <LogIn size={18} /> : <ShieldCheck size={18} />}
+            <span>{isLoginMode ? 'Initiate Secure Uplink' : 'Register Secure Profile'}</span>
           </button>
         </form>
+
+        <div className="auth-toggle-wrapper">
+          <p onClick={() => setIsLoginMode(!isLoginMode)} className="auth-toggle">
+             {isLoginMode 
+               ? "No registered profile? Register new operative here." 
+               : "Already registered? Login via secure uplink here."
+             }
+          </p>
+        </div>
+
       </motion.div>
     </div>
   );

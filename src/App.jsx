@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { SettingsModal } from './components/SettingsModal';
 import { Dashboard } from './pages/Dashboard';
 import { IntelligenceGraph } from './pages/IntelligenceGraph';
 import { DataFeeds } from './pages/DataFeeds';
-import { DefenseIntel } from './pages/DefenseIntel';
 import { ClimateGeo } from './pages/ClimateGeo';
+import { MasterGraph } from './pages/MasterGraph';
 import { VoiceIntel } from './pages/VoiceIntel';
 import { Login } from './pages/Login';
 import './App.css';
@@ -16,6 +16,11 @@ function App() {
   
   const [currentView, setCurrentView] = useState('dashboard');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const handleLogin = (country) => {
     setUserCountry(country);
@@ -37,11 +42,11 @@ function App() {
       case 'dashboard':
         return <Dashboard userCountry={userCountry} />;
       case 'graph':
-        return <IntelligenceGraph userCountry={userCountry} />;
+        return <IntelligenceGraph userCountry={userCountry} theme={theme} />;
       case 'feeds':
         return <DataFeeds userCountry={userCountry} />;
-      case 'defense':
-        return <DefenseIntel userCountry={userCountry} />;
+      case 'mastergraph':
+        return <MasterGraph userCountry={userCountry} />;
       case 'climate':
         return <ClimateGeo userCountry={userCountry} />;
       case 'voice':
@@ -58,6 +63,8 @@ function App() {
         setCurrentView={setCurrentView} 
         onOpenSettings={() => setIsSettingsOpen(true)}
         onLogout={handleLogout}
+        theme={theme}
+        setTheme={setTheme}
       />
       
       <main className="main-content">
@@ -68,7 +75,7 @@ function App() {
             <span className="current-path">
               {currentView === 'graph' ? 'Intelligence Graph' : 
                currentView === 'feeds' ? 'Live Feeds' :
-               currentView === 'defense' ? 'Defense Intel' :
+               currentView === 'mastergraph' ? 'Master Graph' :
                currentView === 'climate' ? 'Climate & Geo' : 
                currentView === 'voice' ? 'Voice System' : 'Dashboard'}
             </span>

@@ -1,50 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Filter, Activity, Server, FileText, ExternalLink, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Activity, FileText, ExternalLink, AlertTriangle, Globe2, TrendingUp, Shield, Cpu, CloudRain, Users } from 'lucide-react';
 import { fetchGdeltData } from '../utils/gdeltFetcher';
 import { ReportModal } from '../components/ReportModal';
 import './DataFeeds.css';
 
+const CATEGORIES = [
+  { id: 'All', label: 'All Feeds', icon: Activity },
+  { id: 'Geopolitics', label: 'Geopolitics', icon: Globe2 },
+  { id: 'Economics', label: 'Economics', icon: TrendingUp },
+  { id: 'Defense', label: 'Defense', icon: Shield },
+  { id: 'Technology', label: 'Technology', icon: Cpu },
+  { id: 'Climate', label: 'Climate', icon: CloudRain },
+  { id: 'Society', label: 'Society', icon: Users },
+];
+
+// Keyword-based auto-classifier
+const classifyArticle = (title) => {
+  const t = title.toLowerCase();
+  
+  if (t.match(/military|army|navy|air force|missile|weapon|defense|defence|war|strike|troops|nato|pentagon|drone/))
+    return 'Defense';
+  if (t.match(/economy|gdp|trade|inflation|market|stock|bank|currency|tariff|export|import|recession|fiscal|budget/))
+    return 'Economics';
+  if (t.match(/climate|weather|flood|earthquake|hurricane|carbon|emission|temperature|wildfire|drought|ocean|pollution/))
+    return 'Climate';
+  if (t.match(/ai|tech|software|chip|cyber|hack|robot|space|satellite|quantum|startup|digital|internet|5g|semiconductor/))
+    return 'Technology';
+  if (t.match(/election|protest|refugee|rights|health|education|crime|social|community|population|culture|poverty|housing/))
+    return 'Society';
+  
+  return 'Geopolitics'; // Default bucket
+};
+
+const getSeverity = (title) => {
+  const t = title.toLowerCase();
+  if (t.match(/war|attack|crisis|emergency|killed|bomb|threat|collapse/)) return 'high';
+  if (t.match(/concern|tension|risk|dispute|sanction|decline|warning/)) return 'moderate';
+  return 'low';
+};
+
 export function DataFeeds({ userCountry }) {
-  const [filter, setFilter] = useState('All');
-  const [alerts, setAlerts] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [allArticles, setAllArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFeed, setSelectedFeed] = useState(null);
 
   const loadFeeds = async () => {
     setLoading(true);
-    const query = filter === 'All' ? (userCountry || 'Global') : filter;
+    const country = userCountry || 'Global';
+    
+    // Category-specific search terms to ensure every category gets populated
+    const categoryQueries = {
+      Geopolitics: `${country} geopolitics diplomacy foreign policy`,
+      Economics: `${country} economy GDP trade market`,
+      Defense: `${country} military defense army security`,
+      Technology: `${country} technology AI startup digital`,
+      Climate: `${country} climate weather environment energy`,
+      Society: `${country} society education health election`,
+    };
+    
     try {
-      const articles = await fetchGdeltData(query, 50);
-      const mappedFeeds = articles.map((art, idx) => {
-        let sev = 'low';
-        let domain = filter === 'All' ? 'Geopolitics' : filter;
-        
-        if (art.title.toLowerCase().includes('war') || art.title.toLowerCase().includes('attack')) sev = 'high';
-        else if (art.title.toLowerCase().includes('economy') || art.title.toLowerCase().includes('trade')) { sev = 'moderate'; domain = 'Economics'; }
-        
-        return {
-          id: idx,
-          domain: domain,
-          severity: sev,
-          message: art.title,
-          source: art.domain,
-          url: art.url,
-          timestamp: new Date(
-            art.seendate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, '$1-$2-$3T$4:$5:$6Z')
-          ).toLocaleTimeString()
-        };
+      // Fetch all categories in parallel
+      const results = await Promise.allSettled(
+        Object.entries(categoryQueries).map(async ([cat, query]) => {
+          const articles = await fetchGdeltData(query, 10);
+          return articles.map(art => ({ ...art, forcedCategory: cat }));
+        })
+      );
+      
+      let allItems = [];
+      let idCounter = 0;
+      
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value.length > 0) {
+          result.value.forEach(art => {
+            allItems.push({
+              id: idCounter++,
+              domain: art.forcedCategory,
+              severity: getSeverity(art.title),
+              message: art.title,
+              source: art.domain || 'GN-RSS',
+              url: art.url,
+              timestamp: new Date(art.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+          });
+        }
       });
-      setAlerts(mappedFeeds);
+      
+      if (allItems.length === 0) throw new Error('No articles fetched');
+      setAllArticles(allItems);
     } catch (err) {
-      console.error('GDELT fetch error, falling back:', err);
-      const f = filter === 'All' ? 'Global' : filter;
-      setAlerts([
-        { id: 1, domain: filter==='All' ? 'Defense' : filter, severity: 'high', timestamp: new Date().toLocaleTimeString(), message: `Unauthorized airspace incursion detected globally affecting ${f}.`, source: 'MIL-SAT-4', url: `https://news.google.com/search?q=${encodeURIComponent(f + ' defense military airspace')}` },
-        { id: 2, domain: filter==='All' ? 'Economics' : filter, severity: 'moderate', timestamp: new Date().toLocaleTimeString(), message: `Sudden massive volume offloading relating to ${f} equities.`, source: 'DARK-POOL-8', url: `https://news.google.com/search?q=${encodeURIComponent(f + ' economy stock market')}` },
-        { id: 3, domain: filter==='All' ? 'Geopolitics' : filter, severity: 'low', timestamp: new Date().toLocaleTimeString(), message: `Diplomatic backchannel chatter increased by 400% regarding ${f} perimeter.`, source: 'SIGINT-ALPHA', url: `https://news.google.com/search?q=${encodeURIComponent(f + ' geopolitics diplomacy')}` },
-        { id: 4, domain: filter==='All' ? 'Cyber' : filter, severity: 'high', timestamp: new Date().toLocaleTimeString(), message: `Zero-day exploit signature identified traversing ${f} fiber trunks.`, source: 'NSA-HUB', url: `https://news.google.com/search?q=${encodeURIComponent(f + ' cyber attack infrastructure')}` },
-        { id: 5, domain: filter==='All' ? 'Climate' : filter, severity: 'moderate', timestamp: new Date().toLocaleTimeString(), message: `Rapid thermal anomaly detected near ${f} currents.`, source: 'NOAA-API', url: `https://news.google.com/search?q=${encodeURIComponent(f + ' climate environment')}` }
+      console.error('Feed pipeline error:', err);
+      setAllArticles([
+        { id: 1, domain: 'Defense', severity: 'high', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} defense posture under active surveillance.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' defense')}` },
+        { id: 2, domain: 'Economics', severity: 'moderate', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} GDP growth projections revised by IMF.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' economy')}` },
+        { id: 3, domain: 'Technology', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} digital infrastructure expansion accelerating.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' technology')}` },
+        { id: 4, domain: 'Geopolitics', severity: 'moderate', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} diplomatic channels reporting elevated activity.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' geopolitics')}` },
+        { id: 5, domain: 'Climate', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} environmental monitoring stations active.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' climate')}` },
+        { id: 6, domain: 'Society', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} social development indicators under review.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' society')}` },
       ]);
     }
     setLoading(false);
@@ -54,57 +108,100 @@ export function DataFeeds({ userCountry }) {
     loadFeeds();
     const intervalId = setInterval(loadFeeds, 15 * 60 * 1000); // 15 mins
     return () => clearInterval(intervalId);
-  }, [filter, userCountry]);
+  }, [userCountry]);
 
-  const filteredFeeds = alerts.filter(feed => filter === 'All' || feed.domain === filter); 
+  // Client-side filtering
+  const filteredFeeds = useMemo(() => {
+    if (activeCategory === 'All') return allArticles;
+    return allArticles.filter(a => a.domain === activeCategory);
+  }, [activeCategory, allArticles]);
+
+  // Count per category for badges
+  const categoryCounts = useMemo(() => {
+    const counts = { All: allArticles.length };
+    CATEGORIES.forEach(c => {
+      if (c.id !== 'All') counts[c.id] = allArticles.filter(a => a.domain === c.id).length;
+    });
+    return counts;
+  }, [allArticles]);
 
   return (
     <div className="feeds-container">
       <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1>Live Intelligence Feeds</h1>
-          <p>Unfiltered, real-time data streams across all ontological domains.</p>
+          <h1>{userCountry} Intelligence Feeds</h1>
+          <p>Real-time classified streams for {userCountry} across all ontological domains.</p>
         </div>
         <div className="live-indicator">
           <div className="live-dot"></div> LIVE NETWORK
         </div>
       </header>
 
-      <div className="feeds-list">
-        {loading ? (
-           <div style={{color: '#fff', textAlign: 'center', padding: '40px'}}>Intercepting Global Subnet Transmissions...</div>
-        ) : filteredFeeds.map((feed, idx) => (
-          <motion.div 
-            key={feed.id} 
-            className={`feed-card severity-${feed.severity}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: (idx % 10) * 0.05 }}
-          >
-            <div className="feed-header">
-              <span className="feed-type">
-                {feed.severity === 'high' ? <AlertTriangle size={16}/> : <Activity size={16}/>}
-                {feed.domain}
-              </span>
-              <span className="feed-time">{feed.timestamp}</span>
-            </div>
-            <div className="feed-content">
-              <p>{feed.message}</p>
-              {feed.source && <div style={{marginTop: '12px', fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--accent-cyan)'}}>NODE: {feed.source}</div>}
-            </div>
-            <div className="feed-actions">
-              <a href={feed.url} target="_blank" rel="noopener noreferrer" className="feed-action-btn">
-                 <ExternalLink size={14}/> View Source
-              </a>
-              <button className="feed-action-btn" onClick={() => setSelectedFeed(feed)}>
-                 <FileText size={14}/> Gen Report
-              </button>
-            </div>
-          </motion.div>
-        ))}
+      {/* Category Filter Tabs */}
+      <div className="category-tabs">
+        {CATEGORIES.map(cat => {
+          const Icon = cat.icon;
+          const count = categoryCounts[cat.id] || 0;
+          return (
+            <button
+              key={cat.id}
+              className={`category-tab ${activeCategory === cat.id ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat.id)}
+            >
+              <Icon size={16} />
+              <span>{cat.label}</span>
+              {count > 0 && <span className="tab-badge">{count}</span>}
+            </button>
+          );
+        })}
       </div>
 
-      <ReportModal feed={selectedFeed} onClose={() => setSelectedFeed(null)} />
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={activeCategory}
+          className="feeds-list"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {loading ? (
+            <div style={{color: 'var(--text-primary)', textAlign: 'center', padding: '40px'}}>Intercepting {userCountry} Subnet Transmissions...</div>
+          ) : filteredFeeds.length === 0 ? (
+            <div style={{color: 'var(--text-secondary)', textAlign: 'center', padding: '40px'}}>No intelligence detected in this category.</div>
+          ) : filteredFeeds.map((feed, idx) => (
+            <motion.div 
+              key={feed.id} 
+              className={`feed-card severity-${feed.severity}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (idx % 10) * 0.05 }}
+            >
+              <div className="feed-header">
+                <span className="feed-type">
+                  {feed.severity === 'high' ? <AlertTriangle size={16}/> : <Activity size={16}/>}
+                  {feed.domain}
+                </span>
+                <span className="feed-time">{feed.timestamp}</span>
+              </div>
+              <div className="feed-content">
+                <p>{feed.message}</p>
+                {feed.source && <div style={{marginTop: '12px', fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--accent-cyan)'}}>NODE: {feed.source}</div>}
+              </div>
+              <div className="feed-actions">
+                <a href={feed.url} target="_blank" rel="noopener noreferrer" className="feed-action-btn">
+                   <ExternalLink size={14}/> View Source
+                </a>
+                <button className="feed-action-btn" onClick={() => setSelectedFeed(feed)}>
+                   <FileText size={14}/> Gen Report
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+
+      <ReportModal feed={selectedFeed} onClose={() => setSelectedFeed(null)} userCountry={userCountry} />
     </div>
   );
 }
