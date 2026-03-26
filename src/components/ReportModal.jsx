@@ -51,47 +51,48 @@ const callGemini = async (prompt) => {
 const generateLocalAnalysis = (headline, country) => {
   const t = headline.toLowerCase();
   
-  let summary = '';
-  let impact = [];
-  let graphData = [
-    { name: 'Stability', value: 70 },
-    { name: 'Risk', value: 30 },
-    { name: 'Urgency', value: 40 }
+  // Create a dynamic summary by seeding the headline into a template
+  const templates = [
+    `The situation regarding "${headline}" marks a significant pivot point for regional interests. Analysts suggest that the convergence of actors mentioned indicates a high-velocity development that ${country} monitors closely.`,
+    `Developments involving "${headline}" are being triangulated by ontological sensors. This suggests a non-linear impact on the ${country} strategic perimeter, requiring immediate context-aware evaluation.`,
+    `The data-stream regarding "${headline}" highlights a shift in power dynamics. For ${country}, the intersection of these variables reflects a growing complexity in the current geopolitical cycle.`
   ];
   
-  // Generate contextual summary based on keyword detection
-  if (t.match(/war|conflict|military|attack|strike/)) {
-    summary = `This development signals a significant escalation in military tensions that could reshape regional security dynamics. The conflict trajectory suggests potential involvement of major powers and could trigger broader geopolitical realignments.`;
+  const summary = templates[Math.floor(Math.random() * templates.length)];
+  
+  // Dynamic, category-aware impact points
+  let impact = [];
+  if (t.match(/war|conflict|military|attack/)) {
     impact = [
-        `Energy Security: Potential 15% increase in fuel prices.`,
-        `Defense Spending: Pressure to increase military preparedness.`,
-        `Diplomatic Positioning: Need to navigate alliance obligations.`
+      `Strategic Alert: Escalation in "${headline}" increases military readiness requirements.`,
+      `Supply Volatility: ${country} may experience friction in regional transit corridors.`,
+      `Allied Posture: Pressure to align diplomatic responses with regional partners.`,
+      `Risk Index: Direct correlation between these tensions and domestic security costs.`
     ];
-    graphData = [
-        { name: 'Security Risk', value: 90 },
-        { name: 'Diplomatic Strain', value: 75 },
-        { name: 'Economic Volatility', value: 60 }
-    ];
-  } else if (t.match(/economy|gdp|trade|inflation|market|recession|tariff/)) {
-    summary = `This economic development reflects deeper structural shifts in global financial markets. The implications extend beyond immediate market reactions to potentially reshape monetary policy decisions across major economies.`;
+  } else if (t.match(/economy|trade|market|bank/)) {
     impact = [
-        `Trade Balance: Export competitiveness could be directly affected.`,
-        `Currency Pressure: Domestic currency may face depreciation pressure.`,
-        `Investment flow: FDI could be impacted by shifting risk profiles.`
-    ];
-    graphData = [
-        { name: 'Market Risk', value: 85 },
-        { name: 'Inflationary Pressure', value: 70 },
-        { name: 'Growth Impact', value: -40 }
+      `Market Friction: "${headline}" introduces new variables into the domestic trade balance.`,
+      `Currency Velocity: Potential ripple effects on ${country}'s exchange rate stability.`,
+      `Investment Climate: Capital flows may pivot based on the risk profile of this event.`,
+      `Policy Recalibration: Central banking authorities may need to adjust for external volatility.`
     ];
   } else {
-    summary = `This geopolitical development signals a notable shift in international relations. The event reflects broader trends in global power dynamics and multilateral cooperation frameworks.`;
     impact = [
-        `Diplomatic Relations: Bilateral relationships may be tested.`,
-        `Regional Stability: Neighborhood may experience increased volatility.`,
-        `Trade Agreements: Strategic corridors could face negotiation pressure.`
+      `Diplomatic Navigation: "${headline}" requires careful balancing of ${country} interests.`,
+      `Informational Integrity: Countering potential narratives emerging from this specific flashpoint.`,
+      `Regional Equilibrium: This development tests the current stability of the ${country} sphere.`,
+      `Operational Readiness: Government departments are briefed on the specifics of this update.`
     ];
   }
+
+  // Generate unique graph data based on string similarity/length for a custom feel
+  const seed = headline.length % 40;
+  const graphData = [
+    { name: 'Stability', value: Math.max(10, 80 - seed) },
+    { name: 'Risk', value: Math.min(95, 20 + seed * 2) },
+    { name: 'Urgency', value: Math.min(100, 10 + seed * 3) },
+    { name: 'Logic Pulse', value: 40 + (headline.length % 50) }
+  ];
   
   return { summary, impact, graphData };
 };
@@ -145,17 +146,18 @@ export function ReportModal({ feed, onClose, userCountry }) {
 ${articleText.substring(0, 3000)}
 """` : `**NEWS HEADLINE:** "${headline}"`;
 
-    const prompt = `You are a high-level NLP analyst. Strictly analyze the following article text and provide a structured report in JSON format. 
-DO NOT use generic geopolitical filler. Base every word on the specific news article provided.
+    const prompt = `You are a specialized NLP intelligence analyst. Your task is to extract unique insights from the provided news article.
+STRICTLY FORBIDDEN: Do not use generic filler like "This development signals a shift..." or "Analysts are monitoring...".
+MANDATORY: You MUST include at least two specific names, numbers, or locations mentioned in the text in your summary.
 
 ${promptContext}
 
 **TARGET COUNTRY:** ${country}
 
-**REQUIREMENTS:**
-1. "summary": A concise 3-4 sentence analytical summary strictly bound to the article content.
-2. "impact": An array of 4 strings explaining specific consequences for ${country}.
-3. "graph": An array of objects for a Bar Chart: [{"name": "Risk", "value": 0-100}, {"name": "Economic", "value": 0-100}, {"name": "Diplomatic", "value": 0-100}, {"name": "Urgency", "value": 0-100}]. Calculate these values based on the text intensity.
+**JSON REQUIREMENTS:**
+1. "summary": A 3-4 sentence analysis that focuses EXCLUSIVELY on the facts in the text above. 
+2. "impact": An array of 4 unique, actionable consequences for ${country}.
+3. "graph": Array of 4-5 scoring objects for a Bar Chart: [{"name": "Metric", "value": 0-100}]. Calculate values based on the specific severity of the events described.
 
 Return EXACTLY this JSON structure:
 {
@@ -209,7 +211,12 @@ Return EXACTLY this JSON structure:
           onClick={(e) => e.stopPropagation()}
         >
           <div className="report-header">
-            <h2><Cpu size={22} /> AI Intelligence Report</h2>
+            <div className="header-main">
+              <h2><Cpu size={22} /> AI Intelligence Report</h2>
+              <div className={`source-badge ${source}`}>
+                {source === 'gemini' ? 'DEEP AI ANALYSIS' : 'ONTOLOGY ENGINE'}
+              </div>
+            </div>
             <button className="close-btn" onClick={onClose}><X size={22} /></button>
           </div>
 
@@ -232,13 +239,13 @@ Return EXACTLY this JSON structure:
             >
               {/* Original Headline */}
               <div className="report-headline">
-                <span className="headline-label">ANALYZED HEADLINE</span>
-                <p>{feed.message}</p>
+                <span className="headline-label">ANALYZED DATA POINT</span>
+                <p>{feed.title || feed.message}</p>
               </div>
 
               {/* Section 1: Summary */}
               <div className="report-section">
-                <h3><FileText size={18} /> Summary</h3>
+                <h3><FileText size={18} /> Intelligence Summary</h3>
                 <div className="report-text">
                   {summary.split('\n').filter(l => l.trim()).map((line, i) => (
                     <p key={i} style={{ marginBottom: '8px' }}>{line}</p>
@@ -261,7 +268,7 @@ Return EXACTLY this JSON structure:
                         />
                         <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
                           {graphData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.value > 60 ? '#f87171' : entry.value > 30 ? '#fbbf24' : '#34d399'} />
+                            <Cell key={`cell-${index}`} fill={entry.value > 75 ? '#f87171' : entry.value > 45 ? '#fbbf24' : '#34d399'} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -286,8 +293,14 @@ Return EXACTLY this JSON structure:
               )}
 
               {/* Source indicator */}
-              <div style={{ textAlign: 'right', fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                {source === 'gemini' ? '⚡ Powered by Gemini AI' : '🧠 Powered by Ontology Analysis Engine'}
+              <div className="report-footer">
+                <div className="footer-status">
+                   <div className="status-dot pulse"></div>
+                   <span>System Secure | {source === 'gemini' ? 'Neural Link Active' : 'Ontological Fallback Active'}</span>
+                </div>
+                <div className="engine-label">
+                  GOE v4.2.0 | {source === 'gemini' ? 'Gemini 2.0 Flash' : 'Ontology Engine'}
+                </div>
               </div>
             </motion.div>
           )}

@@ -342,15 +342,26 @@ export default function gdeltEventsPlugin() {
 
           if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
           const html = await response.text();
-          
           const $ = cheerio.load(html);
-          // Extract text from standard paragraph tags
+          
+          // Try to get a high-quality summary from meta tags first as a backup
+          const metaDesc = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
+          
+          // Extract text from standard content containers
           let text = '';
-          $('p').each((i, el) => {
-            text += $(el).text() + '\n\n';
+          $('article p, main p, .content p, .article-body p, .post-content p, .entry-content p, p').each((i, el) => {
+            const pText = $(el).text().trim();
+            if (pText.length > 40) { // filter out short fragments
+              text += pText + '\n\n';
+            }
           });
           
-          text = text.replace(/\s+/g, ' ').trim().slice(0, 4000); // Send max 4000 chars to avoid token limits
+          // If we found almost no body text, use the meta description
+          if (text.length < 200 && metaDesc) {
+            text = "SUMMARY FROM SOURCE: " + metaDesc + "\n\n" + text;
+          }
+          
+          text = text.replace(/\s+/g, ' ').trim().slice(0, 4500); 
 
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ text }));
