@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Activity, Users, ShieldAlert, TrendingUp, Globe2, Newspaper } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { fetchGdeltData } from '../utils/gdeltFetcher';
+import { fetchAllCategoryFeeds } from '../utils/gdeltFetcher';
 import './Dashboard.css';
 
 // Mock Generator for Country-Specific Data
@@ -96,11 +96,15 @@ export function Dashboard({ userCountry }) {
     setLoadingNews(true);
     const origin = userCountry || 'Global';
     try {
-      const articles = await fetchGdeltData(origin, 5);
-      const mapped = articles.map((art, i) => ({
+      const feeds = await fetchAllCategoryFeeds(origin);
+      const allArticles = [];
+      Object.keys(feeds).forEach(cat => allArticles.push(...(feeds[cat] || [])));
+      allArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      
+      const mapped = allArticles.slice(0, 5).map((art, i) => ({
          id: i,
          title: art.title,
-         type: 'GDELT Intel',
+         type: art.domain || 'GDELT Intel',
          url: art.url
       }));
       setLiveNews(mapped);

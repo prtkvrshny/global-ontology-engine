@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Share2, Activity, Globe, Mic, Settings, LogOut, Sun, Moon, BarChart3 } from 'lucide-react';
+import { Home, Share2, Activity, Globe, Settings, LogOut, Sun, Moon, BarChart3 } from 'lucide-react';
 import clsx from 'clsx';
 import './Sidebar.css';
 
@@ -9,7 +9,6 @@ const navItems = [
   { id: 'feeds', icon: Activity, label: 'Feeds' },
   { id: 'mastergraph', icon: BarChart3, label: 'Master Graph' },
   { id: 'climate', icon: Globe, label: 'Climate' },
-  { id: 'voice', icon: Mic, label: 'Voice' },
 ];
 
 export function Sidebar({ currentView, setCurrentView, onOpenSettings, onLogout, theme, setTheme }) {

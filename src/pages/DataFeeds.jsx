@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, FileText, ExternalLink, AlertTriangle, Globe2, TrendingUp, Shield, Cpu, CloudRain, Users } from 'lucide-react';
-import { fetchGdeltData } from '../utils/gdeltFetcher';
+import { Activity, FileText, ExternalLink, AlertTriangle, Globe2, TrendingUp, Shield, Cpu, CloudRain, Users, RefreshCw } from 'lucide-react';
+import { fetchAllCategoryFeeds, getRelativeTime } from '../utils/gdeltFetcher';
 import { ReportModal } from '../components/ReportModal';
 import './DataFeeds.css';
 
@@ -45,44 +45,32 @@ export function DataFeeds({ userCountry }) {
   const [allArticles, setAllArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFeed, setSelectedFeed] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const [, setTick] = useState(0); // force re-render for relative times
 
   const loadFeeds = async () => {
     setLoading(true);
     const country = userCountry || 'Global';
     
-    // Category-specific search terms to ensure every category gets populated
-    const categoryQueries = {
-      Geopolitics: `${country} geopolitics diplomacy foreign policy`,
-      Economics: `${country} economy GDP trade market`,
-      Defense: `${country} military defense army security`,
-      Technology: `${country} technology AI startup digital`,
-      Climate: `${country} climate weather environment energy`,
-      Society: `${country} society education health election`,
-    };
-    
     try {
-      // Fetch all categories in parallel
-      const results = await Promise.allSettled(
-        Object.entries(categoryQueries).map(async ([cat, query]) => {
-          const articles = await fetchGdeltData(query, 10);
-          return articles.map(art => ({ ...art, forcedCategory: cat }));
-        })
-      );
+      // Use the new fetchAllCategoryFeeds which fetches 10 per category via Vite proxy
+      const categoryFeeds = await fetchAllCategoryFeeds(country, 10);
       
       let allItems = [];
       let idCounter = 0;
       
-      results.forEach((result) => {
-        if (result.status === 'fulfilled' && result.value.length > 0) {
-          result.value.forEach(art => {
+      Object.entries(categoryFeeds).forEach(([category, articles]) => {
+        if (articles && articles.length > 0) {
+          articles.forEach(art => {
             allItems.push({
               id: idCounter++,
-              domain: art.forcedCategory,
+              domain: category,
               severity: getSeverity(art.title),
               message: art.title,
-              source: art.domain || 'GN-RSS',
+              source: art.domain || 'GDELT',
               url: art.url,
-              timestamp: new Date(art.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              rawDate: art.pubDate,
             });
           });
         }
@@ -92,22 +80,36 @@ export function DataFeeds({ userCountry }) {
       setAllArticles(allItems);
     } catch (err) {
       console.error('Feed pipeline error:', err);
+      const now = new Date().toISOString();
       setAllArticles([
-        { id: 1, domain: 'Defense', severity: 'high', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} defense posture under active surveillance.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' defense')}` },
-        { id: 2, domain: 'Economics', severity: 'moderate', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} GDP growth projections revised by IMF.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' economy')}` },
-        { id: 3, domain: 'Technology', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} digital infrastructure expansion accelerating.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' technology')}` },
-        { id: 4, domain: 'Geopolitics', severity: 'moderate', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} diplomatic channels reporting elevated activity.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' geopolitics')}` },
-        { id: 5, domain: 'Climate', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} environmental monitoring stations active.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' climate')}` },
-        { id: 6, domain: 'Society', severity: 'low', timestamp: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), message: `${country} social development indicators under review.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' society')}` },
+        { id: 1, domain: 'Defense', severity: 'high', rawDate: now, message: `${country} defense posture under active surveillance.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' defense')}` },
+        { id: 2, domain: 'Economics', severity: 'moderate', rawDate: now, message: `${country} GDP growth projections revised by IMF.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' economy')}` },
+        { id: 3, domain: 'Technology', severity: 'low', rawDate: now, message: `${country} digital infrastructure expansion accelerating.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' technology')}` },
+        { id: 4, domain: 'Geopolitics', severity: 'moderate', rawDate: now, message: `${country} diplomatic channels reporting elevated activity.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' geopolitics')}` },
+        { id: 5, domain: 'Climate', severity: 'low', rawDate: now, message: `${country} environmental monitoring stations active.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' climate')}` },
+        { id: 6, domain: 'Society', severity: 'low', rawDate: now, message: `${country} social development indicators under review.`, source: 'FALLBACK', url: `https://news.google.com/search?q=${encodeURIComponent(country + ' society')}` },
       ]);
     }
     setLoading(false);
+    setRefreshing(false);
+    setLastRefresh(new Date());
   };
 
   useEffect(() => {
     loadFeeds();
-    const intervalId = setInterval(loadFeeds, 15 * 60 * 1000); // 15 mins
+    const intervalId = setInterval(loadFeeds, 5 * 60 * 1000); // 5 mins
     return () => clearInterval(intervalId);
+  }, [userCountry]);
+
+  // Tick every 30s to keep relative times fresh
+  useEffect(() => {
+    const tickId = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(tickId);
+  }, []);
+
+  const handleManualRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadFeeds();
   }, [userCountry]);
 
   // Client-side filtering
@@ -132,8 +134,19 @@ export function DataFeeds({ userCountry }) {
           <h1>{userCountry} Intelligence Feeds</h1>
           <p>Real-time classified streams for {userCountry} across all ontological domains.</p>
         </div>
-        <div className="live-indicator">
-          <div className="live-dot"></div> LIVE NETWORK
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            className="refresh-btn" 
+            onClick={handleManualRefresh} 
+            disabled={refreshing || loading}
+            title="Refresh feeds now"
+          >
+            <RefreshCw size={16} className={refreshing ? 'spin-icon' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <div className="live-indicator">
+            <div className="live-dot"></div> LIVE NETWORK
+          </div>
         </div>
       </header>
 
@@ -182,7 +195,7 @@ export function DataFeeds({ userCountry }) {
                   {feed.severity === 'high' ? <AlertTriangle size={16}/> : <Activity size={16}/>}
                   {feed.domain}
                 </span>
-                <span className="feed-time">{feed.timestamp}</span>
+                <span className="feed-time" title={feed.rawDate ? new Date(feed.rawDate).toLocaleString() : ''}>{feed.rawDate ? getRelativeTime(feed.rawDate) : 'N/A'}</span>
               </div>
               <div className="feed-content">
                 <p>{feed.message}</p>

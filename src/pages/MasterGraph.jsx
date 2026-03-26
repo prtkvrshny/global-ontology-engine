@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart, ReferenceLine } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Shield, Globe2, Cpu, CloudRain, Users, BarChart3, Zap, Eye } from 'lucide-react';
-import { fetchGdeltData } from '../utils/gdeltFetcher';
+import { fetchAllCategoryFeeds } from '../utils/gdeltFetcher';
 import './MasterGraph.css';
 
 // ─── Criticality Scoring Engine ───
@@ -202,33 +202,19 @@ export function MasterGraph({ userCountry }) {
       setLoading(true);
       const country = userCountry || 'Global';
       
-      const categoryQueries = {
-        Geopolitics: `${country} geopolitics diplomacy foreign policy`,
-        Economics: `${country} economy GDP trade market`,
-        Defense: `${country} military defense army security`,
-        Technology: `${country} technology AI startup digital`,
-        Climate: `${country} climate weather environment energy`,
-        Society: `${country} society education health election`,
-      };
-      
       try {
-        const results = await Promise.allSettled(
-          Object.entries(categoryQueries).map(async ([cat, query]) => {
-            const articles = await fetchGdeltData(query, 10);
-            return articles.map(art => ({ ...art, forcedCategory: cat }));
-          })
-        );
+        const feeds = await fetchAllCategoryFeeds(country);
         
         let allItems = [];
         let idCounter = 0;
         
-        results.forEach((result) => {
-          if (result.status === 'fulfilled' && result.value.length > 0) {
-            result.value.forEach(art => {
+        Object.entries(feeds).forEach(([cat, articles]) => {
+          if (articles && articles.length > 0) {
+            articles.forEach(art => {
               allItems.push({
                 id: idCounter++,
                 title: art.title,
-                category: art.forcedCategory,
+                category: cat,
                 score: scoreArticle(art.title),
                 url: art.url,
               });

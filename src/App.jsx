@@ -6,7 +6,6 @@ import { IntelligenceGraph } from './pages/IntelligenceGraph';
 import { DataFeeds } from './pages/DataFeeds';
 import { ClimateGeo } from './pages/ClimateGeo';
 import { MasterGraph } from './pages/MasterGraph';
-import { VoiceIntel } from './pages/VoiceIntel';
 import { Login } from './pages/Login';
 import './App.css';
 
@@ -49,8 +48,6 @@ function App() {
         return <MasterGraph userCountry={userCountry} />;
       case 'climate':
         return <ClimateGeo userCountry={userCountry} />;
-      case 'voice':
-        return <VoiceIntel userCountry={userCountry} />;
       default:
         return <Dashboard userCountry={userCountry} />;
     }
@@ -76,8 +73,7 @@ function App() {
               {currentView === 'graph' ? 'Intelligence Graph' : 
                currentView === 'feeds' ? 'Live Feeds' :
                currentView === 'mastergraph' ? 'Master Graph' :
-               currentView === 'climate' ? 'Climate & Geo' : 
-               currentView === 'voice' ? 'Voice System' : 'Dashboard'}
+               currentView === 'climate' ? 'Climate & Geo' : 'Dashboard'}
             </span>
           </div>
           <div className="user-profile">
