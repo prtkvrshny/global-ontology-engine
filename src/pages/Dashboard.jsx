@@ -12,7 +12,7 @@ const generateCountryData = (country) => {
     hash = country.charCodeAt(i) + ((hash << 5) - hash);
   }
   
-  const inflation = (Math.abs(hash % 15) + 0.5).toFixed(1);
+  const inflation = "3.21";
   const diplomaticScore = Math.abs(hash % 100);
   let status = 'Stable';
   let color = '#34c759';
