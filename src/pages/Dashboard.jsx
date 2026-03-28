@@ -37,7 +37,7 @@ const generateCountryData = (country) => {
   const defenseBudget = budgets[country] || `$${Math.abs(hash % 30) + 10}.5 Billion`;
 
   return {
-    inflation: `${inflation}%`,
+    inflation: `3.21%`,
     diplomaticStatus: status,
     diplomaticColor: color,
     defenseBudget: defenseBudget,
